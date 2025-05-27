@@ -1,0 +1,109 @@
+import profesiones.*
+import clientes.*
+import empresa.*
+
+describe "All tests" {
+  const property uniSanMartin = new Universidad(
+    provincia = "BuenosAires",
+    honorarios = 3500
+  )
+  const property uniRosario = new Universidad(
+    provincia = "SantaFe",
+    honorarios = 2800
+  )
+  const property uniCorrientes = new Universidad(
+    provincia = "Corrientes",
+    honorarios = 4200
+  )
+  const property uniHurlingham = new Universidad(
+    provincia = "BuenosAires",
+    honorarios = 8800
+  )
+  const property juana = new ProfesionalVinculado(universidad = uniRosario)
+  const property melina = new ProfesionalAsociadoLit(
+    universidad = uniCorrientes
+  )
+  const property rocio = new ProfesionalLibre(
+    universidad = uniHurlingham,
+    honorariosPorHs = 5000,
+    provinciasLaborales = ["SantaFe", "Cordoba", "BuenosAires"]
+  )
+  const property luciana = new ProfesionalLibre(
+    universidad = uniRosario,
+    honorariosPorHs = 3200,
+    provinciasLaborales = ["SantaFe", "EntreRios"]
+  )
+  const property televisa = new EmpresaServicios(honorarioReferencia = 3500)
+  const property emma = new Persona(provincia = "SantaFe")
+  const property colegio = new Institucion(
+    universidadesReconocidas = [uniSanMartin, uniRosario, uniCorrientes]
+  )
+  const property boquita = new Club(
+    provincias = ["EntreRios", "SantaFe", "Cordoba"]
+  )
+  
+  const property jose = new ProfesionalLibre(universidad = uniRosario, honorariosPorHs = 80000, provinciasLaborales = ["SantaFe", "Cordoba", "BuenosAires"])
+
+  method initialize() {
+    [juana, melina, rocio, luciana, jose].forEach({ x => televisa.contratar(x) })
+  }
+  
+  test "1) dos de sus profesionales estudiaron en Rosario, uno en Hurlingham, ninguno en San Martín" {
+    assert.equals(2, televisa.cantEstudiantes(uniRosario))
+    assert.equals(1, televisa.cantEstudiantes(uniHurlingham))
+    assert.equals(0, televisa.cantEstudiantes(uniSanMartin))
+  }
+  
+  test "2) como _profesionales caros_, solamente a Rocío." {
+    assert.that(televisa.profesionalesCaros().contains(rocio))
+  }
+  
+  test " 3) como _universidades formadoras_, a las de Rosario, Corrientes y Hurlingham" {
+    assert.equals(
+      #{uniRosario, uniCorrientes, uniHurlingham},
+      televisa.universidadesFormadoras()
+    )
+  }
+  
+  test "4) Empresa de gente acotada" {
+    assert.that(televisa.esDeGenteAcotada())
+  }
+  
+  test "4) Empresa de gente NO acotada" {
+    luciana.provinciasLaborales(["Corrientes", "Misiones"])
+    assert.notThat(televisa.esDeGenteAcotada())
+  }
+  
+  test "2.1) Luciana atiende" {
+    assert.that(televisa.puedeSerAtendido(emma, luciana))
+  }
+  
+  test "2.2) Instituciones son atendidas" {
+    assert.that(televisa.puedeSerAtendido(colegio, juana))
+  }
+  
+  test "2.3) Clubes son atendidos" {
+    assert.that(televisa.puedeSerAtendido(boquita, rocio))
+  }
+  
+  test "3.1) Luciana cobra" {
+    televisa.cobra(luciana, 10000)
+    assert.equals(10000, luciana.ahorros())
+  }
+  
+  test "3.2) Luciana pasa plata" {
+    televisa.paga(luciana, 10000)
+    luciana.pasarDinero(rocio, 5000)
+    assert.equals(5000, luciana.ahorros())
+    assert.equals(5000, rocio.ahorros())
+  }
+
+  test "4.1) Servicios concedidos" {
+    televisa.darServicio(colegio)
+    assert.equals(#{colegio}, televisa.clientes())
+  }
+
+  test "5.1) Jose es poco atractivo" {
+    assert.that(televisa.esPocoAtractivo(jose))
+  }
+}
